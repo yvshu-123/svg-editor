@@ -4,6 +4,8 @@ Lab1 Phase 1：用 TypeScript 写的 SVG 命令行编辑器。在终端里敲命
 
 架构、变化点、过程记录、一致性自查都在 [doc/README.md](doc/README.md)。
 
+Phase 2 的团队分工与各人任务文档见 [docs/](docs/README.md)。
+
 ## 跑起来
 
 ```bash
