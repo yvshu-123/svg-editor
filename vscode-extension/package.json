@@ -1,0 +1,25 @@
+{
+  "name": "svg-editor-outline",
+  "displayName": "SVG 文件标记与大纲",
+  "description": "在资源管理器中标记 SVG 文件，在大纲中浏览并定位 SVG 元素。",
+  "version": "0.1.0",
+  "publisher": "svg-editor-lab",
+  "repository": { "type": "git", "url": "https://github.com/yvshu-123/svg-editor.git" },
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished", "onLanguage:xml"],
+  "main": "./dist/extension.js",
+  "contributes": {},
+  "scripts": {
+    "compile": "tsc -p .",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package",
+    "test": "npm run compile && node --test test/outline.test.cjs"
+  },
+  "dependencies": { "@xmldom/xmldom": "^0.9.12" },
+  "devDependencies": {
+    "@types/vscode": "1.85.0",
+    "@vscode/vsce": "^3.6.0",
+    "typescript": "~5.9.3"
+  }
+}
