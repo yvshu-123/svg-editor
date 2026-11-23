@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120">
+  <g id="workflow">
+    <g id="step">
+      <rect id="start" x="24" y="28" width="120" height="64"
+            rx="12" fill="#dbeafe"/>
+      <text x="50" y="66" fill="#17365d">Start</text>
+    </g>
+    <path id="arrow" d="M150 60h60m-10-8 10 8-10 8"
+          fill="none" stroke="#2563eb" stroke-width="3"/>
+    <circle id="finish" cx="258" cy="60" r="30" fill="#86efac"/>
+  </g>
+</svg>
