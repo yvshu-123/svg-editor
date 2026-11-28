@@ -1,0 +1,11 @@
+{
+  "name": "@svgframe/plugin-shape-rect",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "contributes": {
+    "shapes": [
+      "rect"
+    ]
+  }
+}

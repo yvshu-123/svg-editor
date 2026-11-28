@@ -24,6 +24,10 @@ export class Group extends Shape {
     return this.childList.length;
   }
 
+  override svgTag(): string {
+    return 'g';
+  }
+
   override acceptsChildren(): boolean {
     return true;
   }

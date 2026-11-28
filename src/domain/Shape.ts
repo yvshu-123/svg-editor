@@ -42,6 +42,17 @@ export abstract class Shape {
     return false;
   }
 
+  /** 直接删除、换父容器或平移此节点前调用。抛错可拒绝操作。 */
+  onDetach(): void {}
+
+  canUngroup(): boolean {
+    return true;
+  }
+
+  svgTag(): string {
+    return this.kind;
+  }
+
   textContent(): string | null {
     return null;
   }

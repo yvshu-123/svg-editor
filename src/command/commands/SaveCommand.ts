@@ -6,6 +6,7 @@ import type { SvgWriterPort } from '../../ports/Ports.js';
 /** save [file.svg]：不带参数时用读入路径；写成功后把路径记下来。 */
 export class SaveCommand implements Command {
   readonly kind = 'io' as const;
+  readonly documentChange = 'save' as const;
 
   constructor(
     private readonly path: string | null,

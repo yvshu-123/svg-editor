@@ -1,39 +1,67 @@
+import rect from '../plugins/shape-rect/src/index.js';
+import circle from '../plugins/shape-circle/src/index.js';
+import ellipse from '../plugins/shape-ellipse/src/index.js';
+import line from '../plugins/shape-line/src/index.js';
+import text from '../plugins/shape-text/src/index.js';
+import group from '../plugins/shape-group/src/index.js';
+import { activateBuiltinCommands } from './builtins/BuiltinCommands.js';
 import { CommandRegistry } from './cli/CommandRegistry.js';
-import { HELP_LINES } from './cli/HelpText.js';
+import { HelpComposer } from './cli/HelpComposer.js';
 import { LineTokenizer } from './cli/LineTokenizer.js';
 import { Repl } from './cli/Repl.js';
 import { ShowFormatter } from './cli/ShowFormatter.js';
 import { TreeFormatter } from './cli/TreeFormatter.js';
 import { CommandHistory } from './command/CommandHistory.js';
-import { Document } from './domain/Document.js';
+import { loadPlugins } from './host/PluginLoader.js';
 import { NodeFileSystem } from './io/NodeFileSystem.js';
 import { SvgReader } from './io/SvgReader.js';
 import { SvgWriter } from './io/SvgWriter.js';
+import { AttributeService } from './kernel/AttributeService.js';
+import { createPluginContext } from './kernel/PluginContext.js';
 import { ShapeFactory } from './shapes/ShapeFactory.js';
 
-/**
- * 组装根：唯一允许 new 出各层实现、并把它们接起来的地方。
- * 依赖方向到这里收敛（cli → command / io / shapes / ports / domain）。
- */
+// 在组合根接入具体实现，CLI 与内核只读取已注册的贡献。
 const fileSystem = new NodeFileSystem();
-const shapeFactory = new ShapeFactory();
-const treeFormatter = new TreeFormatter();
+const context = createPluginContext(undefined, (error) => reportError(error instanceof Error ? error.message : String(error)));
+for (const shape of [rect, circle, ellipse, line, text, group]) {
+  shape.activate(context);
+}
+const shapeFactory = new ShapeFactory(context.shapes);
+const treeFormatter = new TreeFormatter(context.decorators);
 const showFormatter = new ShowFormatter();
 
-const registry = new CommandRegistry({
+const helpSections = activateBuiltinCommands(context.commands, {
   factory: shapeFactory,
+  attributes: new AttributeService(context.attributes),
   reader: new SvgReader(fileSystem, shapeFactory),
   writer: new SvgWriter(fileSystem),
   treeRenderer: (document, rootId) => treeFormatter.render(document, rootId),
   shapeRenderer: (document, id) => showFormatter.render(document, id),
-  helpLines: HELP_LINES,
+  helpLines: () => help.compose(),
 });
+const help = new HelpComposer(context.commands, helpSections);
+const registry = new CommandRegistry(context.commands);
 
 const repl = new Repl({
-  document: new Document(),
-  history: new CommandHistory(),
+  document: context.document,
+  history: new CommandHistory(context.emitDocumentChanged),
   registry,
   tokenizer: new LineTokenizer(),
 });
 
+const args = process.argv.slice(2);
+const configIndex = args.indexOf('--config');
+if (configIndex !== -1 && process.env.SVGFRAME_PLUGINS !== 'none') {
+  const config = args[configIndex + 1];
+  if (!config || config.startsWith('--')) {
+    reportError('invalid plugin config');
+  } else {
+    await loadPlugins(config, context, reportError);
+  }
+}
+
 repl.start();
+
+function reportError(message: string): void {
+  process.stderr.write(`error: ${message}\n`);
+}

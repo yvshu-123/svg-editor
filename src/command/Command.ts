@@ -1,4 +1,5 @@
 import type { Document } from '../domain/Document.js';
+import type { DocumentIoChange } from '../ports/Ports.js';
 
 export type CommandKind = 'edit' | 'io' | 'display';
 
@@ -12,6 +13,7 @@ export interface CommandResult {
  */
 export interface Command {
   readonly kind: CommandKind;
+  readonly documentChange?: DocumentIoChange;
   execute(document: Document): CommandResult;
   undo(document: Document): CommandResult;
   redo?(document: Document): CommandResult;

@@ -18,16 +18,17 @@ import { UngroupCommand } from '../../src/command/commands/UngroupCommand.js';
 import { Document } from '../../src/domain/Document.js';
 import { Group } from '../../src/domain/Group.js';
 import { Rect } from '../../src/domain/Rect.js';
-import { ShapeFactory } from '../../src/shapes/ShapeFactory.js';
+import type { ShapeFactory } from '../../src/shapes/ShapeFactory.js';
 import type { SvgReaderPort, SvgWriterPort } from '../../src/ports/Ports.js';
 import { fingerprint } from '../support/fingerprint.js';
+import { createShapeFactory } from '../support/shapes.js';
 
 let doc: Document;
 let factory: ShapeFactory;
 
 beforeEach(() => {
   doc = new Document();
-  factory = new ShapeFactory();
+  factory = createShapeFactory();
 });
 
 const create = (type: string, id: string, params: string[], containerId?: string): CreateShapeCommand =>

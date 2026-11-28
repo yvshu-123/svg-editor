@@ -1,4 +1,5 @@
 import type { Document } from '../domain/Document.js';
+import type { Shape } from '../domain/Shape.js';
 
 /** read 的结果：新文档 + 非致命警告（比如缺 id 自动补了）。 */
 export interface ReadResult {
@@ -23,3 +24,16 @@ export type TreeRenderer = (document: Document, rootId?: string) => string[];
 
 /** show 的渲染，实现放在 cli 层。 */
 export type ShapeRenderer = (document: Document, id: string) => string[];
+
+export interface AttributeSetter {
+  apply(shape: Shape, attribute: string, value: string): void;
+}
+
+export type DocumentIoChange = 'init' | 'read' | 'save';
+
+export interface DocumentChangedEvent {
+  readonly document: Document;
+  readonly reason: DocumentIoChange | 'io' | 'edit' | 'undo' | 'redo';
+}
+
+export type DocumentChangedListener = (event: DocumentChangedEvent) => void;

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { Line } from '../../src/domain/Line.js';
 import { TextShape } from '../../src/domain/TextShape.js';
-import { ShapeFactory } from '../../src/shapes/ShapeFactory.js';
+import { createShapeFactory } from '../support/shapes.js';
 
-const factory = new ShapeFactory();
+const factory = createShapeFactory();
 
 describe('ShapeFactory', () => {
   it('rect 带 fill 和不带 fill', () => {
