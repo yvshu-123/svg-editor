@@ -80,3 +80,23 @@ it('扩展容器保存为标准 g，启用提供者时恢复类型，否则降�
   expect(repl.handleLine('read duplicate.svg')).toEqual(['error: id already exists: bad']);
   expect(repl.handleLine('tree')).toEqual(before);
 });
+
+it('普通 SVG 上已有的 data-kind 仍按原标签读回', () => {
+  const { document, fs, repl } = createCliSession();
+  fs.seed('external.svg', '<svg><rect id="r" data-kind="circle" x="0" y="0" width="10" height="20"/></svg>');
+
+  expect(repl.handleLine('read external.svg')).toEqual(['read external.svg (1 elements)']);
+  expect(document.find('r').kind).toBe('rect');
+  expect(repl.handleLine('save output.svg')).toEqual(['saved to output.svg (1 elements)']);
+  expect(fs.contentOf('output.svg')).toContain('<rect id="r" x="0" y="0" width="10" height="20"/>');
+});
+
+it('默认读回拒绝提供者改写输入 ID', () => {
+  const { context, fs, repl } = createCliSession();
+  context.shapes.register('sample', {
+    kind: 'sample', svgAttributes: [], create: () => new Group('wrong-id'),
+  });
+  fs.seed('external.svg', '<svg><sample id="expected-id"/></svg>');
+
+  expect(repl.handleLine('read external.svg')).toEqual(['error: shape provider changed SVG id: expected-id']);
+});

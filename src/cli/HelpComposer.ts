@@ -1,7 +1,11 @@
 import type { CommandPlugin } from '../kernel/CommandPlugin.js';
 import type { Registry } from '../kernel/Registry.js';
 
-const SECTIONS = ['document', 'shapes', 'view'] as const;
+interface HelpSection {
+  readonly title: string;
+  readonly names: readonly string[];
+}
+
 const COMMON_HELP = [
   'history',
   '  undo                            撤销上一次编辑',
@@ -13,23 +17,33 @@ const COMMON_HELP = [
 ];
 
 export class HelpComposer {
-  constructor(private readonly commands: Pick<Registry<CommandPlugin>, 'values'>) {}
+  constructor(
+    private readonly commands: Pick<Registry<CommandPlugin>, 'get' | 'names'>,
+    private readonly builtinSections: readonly HelpSection[],
+  ) {}
 
   compose(): string[] {
-    const commands = this.commands.values();
     const lines: string[] = [];
-    for (const section of SECTIONS) {
-      const group = commands.filter((command) => command.helpSection === section);
+    const builtinNames = new Set(this.builtinSections.flatMap((section) => section.names));
+    for (const { title, names } of this.builtinSections) {
+      const group = names.flatMap((name) => this.linesFor(name));
       if (group.length > 0) {
-        lines.push(section, ...group.flatMap(helpLines), '');
+        lines.push(title, ...group, '');
       }
     }
     lines.push(...COMMON_HELP);
-    const extra = commands.filter((command) => command.helpSection === undefined).flatMap(helpLines);
+    const extra = this.commands.names()
+      .filter((name) => !builtinNames.has(name))
+      .flatMap((name) => this.linesFor(name));
     if (extra.length > 0) {
       lines.push('', ...extra);
     }
     return lines;
+  }
+
+  private linesFor(name: string): readonly string[] {
+    const command = this.commands.get(name);
+    return command === undefined ? [] : helpLines(command);
   }
 }
 

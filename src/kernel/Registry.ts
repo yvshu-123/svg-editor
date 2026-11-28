@@ -1,6 +1,7 @@
 import { AppError } from '../shared/AppError.js';
 
-export type RegistrationCategory = 'shapes' | 'commands' | 'decorators' | 'attributes';
+export const REGISTRATION_CATEGORIES = ['shapes', 'commands', 'decorators', 'attributes'] as const;
+export type RegistrationCategory = (typeof REGISTRATION_CATEGORIES)[number];
 
 export interface Registration<T> {
   register(name: string, contribution: T): void;
@@ -16,7 +17,10 @@ export class DuplicateRegistrationError extends AppError {
 export class Registry<T> implements Registration<T> {
   private readonly entries = new Map<string, T>();
 
-  constructor(private readonly category: RegistrationCategory) {}
+  constructor(
+    private readonly category: RegistrationCategory,
+    private readonly reservedNames: readonly string[] = [],
+  ) {}
 
   register(name: string, contribution: T): void {
     this.requireAvailable(name);
@@ -59,7 +63,7 @@ export class Registry<T> implements Registration<T> {
   }
 
   private requireAvailable(name: string): void {
-    if (this.entries.has(name)) {
+    if (this.entries.has(name) || this.reservedNames.includes(name)) {
       throw new DuplicateRegistrationError(this.category, name);
     }
   }

@@ -45,7 +45,7 @@ function getNames(registries: NameSources): RegisteredNames {
 export function createPluginContext(document = new Document(), onListenerError?: (error: unknown) => void) {
   const registries = {
     shapes: new Registry<ShapeProvider>('shapes'),
-    commands: new Registry<CommandPlugin>('commands'),
+    commands: new Registry<CommandPlugin>('commands', ['undo', 'redo', 'quit', 'exit']),
     decorators: new Registry<TreeDecorator>('decorators'),
     attributes: new Registry<AttributeHandler>('attributes'),
   };

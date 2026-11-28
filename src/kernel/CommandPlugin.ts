@@ -5,7 +5,6 @@ export interface CommandPlugin {
   readonly usage: string;
   /** 简介，或已经排版的多行帮助。 */
   readonly help: string | readonly string[];
-  readonly helpSection?: 'document' | 'shapes' | 'view';
   readonly requiresDocument: boolean;
   readonly opensDocument?: boolean;
   build(args: string[]): Command;

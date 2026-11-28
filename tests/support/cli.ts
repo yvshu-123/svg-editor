@@ -18,8 +18,7 @@ export function createCliSession(fs = new MemoryFileSystem(), helpLines?: () => 
   const factory = createShapeFactory(context);
   const tree = new TreeFormatter(context.decorators);
   const show = new ShowFormatter();
-  const help = new HelpComposer(context.commands);
-  activateBuiltinCommands(context.commands, {
+  const helpSections = activateBuiltinCommands(context.commands, {
     factory,
     attributes: new AttributeService(context.attributes),
     reader: new SvgReader(fs, factory),
@@ -28,6 +27,7 @@ export function createCliSession(fs = new MemoryFileSystem(), helpLines?: () => 
     shapeRenderer: (document, id) => show.render(document, id),
     helpLines: helpLines ?? (() => help.compose()),
   });
+  const help = new HelpComposer(context.commands, helpSections);
 
   const { document } = context;
   const history = new CommandHistory(context.emitDocumentChanged);

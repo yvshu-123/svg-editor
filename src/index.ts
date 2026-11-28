@@ -30,8 +30,7 @@ const shapeFactory = new ShapeFactory(context.shapes);
 const treeFormatter = new TreeFormatter(context.decorators);
 const showFormatter = new ShowFormatter();
 
-const help = new HelpComposer(context.commands);
-activateBuiltinCommands(context.commands, {
+const helpSections = activateBuiltinCommands(context.commands, {
   factory: shapeFactory,
   attributes: new AttributeService(context.attributes),
   reader: new SvgReader(fileSystem, shapeFactory),
@@ -40,6 +39,7 @@ activateBuiltinCommands(context.commands, {
   shapeRenderer: (document, id) => showFormatter.render(document, id),
   helpLines: () => help.compose(),
 });
+const help = new HelpComposer(context.commands, helpSections);
 const registry = new CommandRegistry(context.commands);
 
 const repl = new Repl({

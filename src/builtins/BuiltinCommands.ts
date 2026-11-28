@@ -33,11 +33,14 @@ export interface BuiltinCommandDependencies {
   helpLines(): readonly string[];
 }
 
-export function activateBuiltinCommands(commands: Registration<CommandPlugin>, deps: BuiltinCommandDependencies): void {
-  function register(helpSection: CommandPlugin['helpSection'], plugins: CommandPlugin[]): void {
+export function activateBuiltinCommands(commands: Registration<CommandPlugin>, deps: BuiltinCommandDependencies) {
+  const helpSections: { title: string; names: string[] }[] = [];
+
+  function register(title: string, plugins: CommandPlugin[]): void {
     for (const plugin of plugins) {
-      commands.register(plugin.name, { ...plugin, helpSection });
+      commands.register(plugin.name, plugin);
     }
+    helpSections.push({ title, names: plugins.map((plugin) => plugin.name) });
   }
 
   register('document', [
@@ -120,6 +123,8 @@ export function activateBuiltinCommands(commands: Registration<CommandPlugin>, d
       '  help                            显示本帮助',
     ], () => new HelpCommand([...deps.helpLines()]), { requiresDocument: false }),
   ]);
+
+  return helpSections;
 }
 
 function command(

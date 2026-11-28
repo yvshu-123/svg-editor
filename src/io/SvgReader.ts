@@ -86,7 +86,9 @@ export class SvgReader {
   private buildElement(element: XmlElement, state: ReadState): Shape | undefined {
     const tag = element.localName ?? element.tagName;
     const kind = element.getAttribute('data-kind');
-    const provider = (kind ? this.factory.provider(kind) : undefined) ?? this.factory.provider(tag);
+    const marked = kind ? this.factory.provider(kind) : undefined;
+    // 只有显式实现读回的提供者才接管异于 SVG 标签的类型标记。
+    const provider = marked?.read === undefined ? this.factory.provider(tag) : marked;
     if (provider === undefined) {
       state.warnings.push(`warning: unsupported element <${tag}> skipped`);
       return undefined;
@@ -101,9 +103,7 @@ export class SvgReader {
         textContent: element.textContent ?? '',
         children: this.buildChildren(element, state),
       });
-      if (shape.id !== id) {
-        throw new AppError(`shape provider changed SVG id: ${id}`);
-      }
+      this.requireMatchingId(shape, id);
       this.applyStyle(shape, element);
       return shape;
     }
@@ -113,6 +113,7 @@ export class SvgReader {
       params.push(element.textContent ?? '');
     }
     const shape = provider.create(id, params);
+    this.requireMatchingId(shape, id);
     this.applyStyle(shape, element);
     this.reserveId(id, state);
     if (shape.acceptsChildren()) {
@@ -132,6 +133,12 @@ export class SvgReader {
       }
     }
     return children;
+  }
+
+  private requireMatchingId(shape: Shape, id: string): void {
+    if (shape.id !== id) {
+      throw new AppError(`shape provider changed SVG id: ${id}`);
+    }
   }
 
   private reserveId(id: string, state: ReadState): void {
