@@ -8,6 +8,7 @@ import { TreeFormatter } from '../../src/cli/TreeFormatter.js';
 import { CommandHistory } from '../../src/command/CommandHistory.js';
 import { SvgReader } from '../../src/io/SvgReader.js';
 import { SvgWriter } from '../../src/io/SvgWriter.js';
+import { AttributeService } from '../../src/kernel/AttributeService.js';
 import { createPluginContext } from '../../src/kernel/PluginContext.js';
 import { MemoryFileSystem } from './memoryFs.js';
 import { createShapeFactory } from './shapes.js';
@@ -15,11 +16,12 @@ import { createShapeFactory } from './shapes.js';
 export function createCliSession(fs = new MemoryFileSystem(), helpLines?: () => readonly string[]) {
   const context = createPluginContext();
   const factory = createShapeFactory(context);
-  const tree = new TreeFormatter();
+  const tree = new TreeFormatter(context.decorators);
   const show = new ShowFormatter();
   const help = new HelpComposer(context.commands);
   activateBuiltinCommands(context.commands, {
     factory,
+    attributes: new AttributeService(context.attributes),
     reader: new SvgReader(fs, factory),
     writer: new SvgWriter(fs),
     treeRenderer: (document, rootId) => tree.render(document, rootId),
@@ -28,7 +30,7 @@ export function createCliSession(fs = new MemoryFileSystem(), helpLines?: () => 
   });
 
   const { document } = context;
-  const history = new CommandHistory();
+  const history = new CommandHistory(context.emitDocumentChanged);
   const registry = new CommandRegistry(context.commands);
   const tokenizer = new LineTokenizer();
   const repl = new Repl({ document, history, registry, tokenizer });

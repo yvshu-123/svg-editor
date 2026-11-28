@@ -1,3 +1,4 @@
+import type { DocumentIoChange } from '../command/Command.js';
 import { Document } from '../domain/Document.js';
 import { AppError } from '../shared/AppError.js';
 import type { AttributeHandler } from './AttributeHandler.js';
@@ -8,7 +9,7 @@ import type { TreeDecorator } from './TreeDecorator.js';
 
 export interface DocumentChangedEvent {
   readonly document: Document;
-  readonly reason: 'init' | 'read' | 'save' | 'edit' | 'undo' | 'redo';
+  readonly reason: DocumentIoChange | 'io' | 'edit' | 'undo' | 'redo';
 }
 
 export type DocumentChangedListener = (event: DocumentChangedEvent) => void;

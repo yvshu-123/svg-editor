@@ -1,6 +1,7 @@
 import type { Document } from '../domain/Document.js';
 
 export type CommandKind = 'edit' | 'io' | 'display';
+export type DocumentIoChange = 'init' | 'read' | 'save';
 
 export interface CommandResult {
   readonly lines: string[];
@@ -12,6 +13,7 @@ export interface CommandResult {
  */
 export interface Command {
   readonly kind: CommandKind;
+  readonly documentChange?: DocumentIoChange;
   execute(document: Document): CommandResult;
   undo(document: Document): CommandResult;
   redo?(document: Document): CommandResult;

@@ -1,7 +1,10 @@
 import type { Document } from '../../domain/Document.js';
+import { AttributeService } from '../../kernel/AttributeService.js';
 import { SnapshotCommand } from '../SnapshotCommand.js';
 
-/** set <id> <attr> <value>：白名单和语义由各自的 Shape 子类负责。 */
+const defaultAttributes = new AttributeService();
+
+/** set <id> <attr> <value>：通过属性服务分派，以一条编辑命令撤销。 */
 export class SetAttributeCommand extends SnapshotCommand {
   private label = '';
 
@@ -9,6 +12,7 @@ export class SetAttributeCommand extends SnapshotCommand {
     private readonly shapeId: string,
     private readonly attribute: string,
     private readonly value: string,
+    private readonly attributes = defaultAttributes,
   ) {
     super();
   }
@@ -16,7 +20,7 @@ export class SetAttributeCommand extends SnapshotCommand {
   protected apply(document: Document): void {
     const shape = document.find(this.shapeId);
     this.label = `${shape.kind}#${shape.id}`;
-    shape.setAttribute(this.attribute, this.value);
+    this.attributes.apply(shape, this.attribute, this.value);
   }
 
   protected describe(document: Document): string[] {

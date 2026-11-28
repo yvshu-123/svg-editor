@@ -15,6 +15,7 @@ import { SetAttributeCommand } from '../command/commands/SetAttributeCommand.js'
 import { ShowCommand } from '../command/commands/ShowCommand.js';
 import { TreeCommand } from '../command/commands/TreeCommand.js';
 import { UngroupCommand } from '../command/commands/UngroupCommand.js';
+import type { AttributeService } from '../kernel/AttributeService.js';
 import type { CommandPlugin } from '../kernel/CommandPlugin.js';
 import type { Registration } from '../kernel/Registry.js';
 import type { ShapeRenderer, SvgReaderPort, SvgWriterPort, TreeRenderer } from '../ports/Ports.js';
@@ -24,6 +25,7 @@ import { parseNumber } from '../shared/NumberFormat.js';
 
 export interface BuiltinCommandDependencies {
   factory: ShapeFactory;
+  attributes: AttributeService;
   reader: SvgReaderPort;
   writer: SvgWriterPort;
   treeRenderer: TreeRenderer;
@@ -91,7 +93,7 @@ export function activateBuiltinCommands(commands: Registration<CommandPlugin>, d
     ], (args) => new ScaleCommand(args[0]!, number(args[1], 'factor'))),
     command('set', 'set <id> <attr> <value>', 3, [
       '  set <id> <attr> <value>         设置属性',
-    ], (args) => new SetAttributeCommand(args[0]!, args[1]!, args[2]!)),
+    ], (args) => new SetAttributeCommand(args[0]!, args[1]!, args[2]!, deps.attributes)),
     command('group', 'group <newGid> <id1> <id2>…', [2, Infinity], [
       '  group <newGid> <id1> <id2>…     新建容器并收编图形',
     ], (args) => new GroupCommand(args[0]!, args.slice(1))),

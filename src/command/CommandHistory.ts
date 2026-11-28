@@ -1,3 +1,4 @@
+import type { DocumentChangedListener } from '../kernel/PluginContext.js';
 import { AppError } from '../shared/AppError.js';
 import type { Command, CommandResult } from './Command.js';
 import type { Document } from '../domain/Document.js';
@@ -13,6 +14,8 @@ export class CommandHistory {
   private readonly redoStack: Command[] = [];
   private locked = false;
 
+  constructor(private readonly onDocumentChanged?: DocumentChangedListener) {}
+
   execute(command: Command, document: Document): CommandResult {
     if (command.kind === 'display') {
       return command.execute(document);
@@ -23,6 +26,7 @@ export class CommandHistory {
       this.undoStack.length = 0;
       this.redoStack.length = 0;
       this.locked = true;
+      this.onDocumentChanged?.({ document, reason: command.documentChange ?? 'io' });
       return result;
     }
 
@@ -30,6 +34,7 @@ export class CommandHistory {
     this.undoStack.push(command);
     this.redoStack.length = 0;
     this.locked = false;
+    this.onDocumentChanged?.({ document, reason: 'edit' });
     return result;
   }
 
@@ -37,12 +42,14 @@ export class CommandHistory {
     if (this.locked) {
       throw new AppError('undo not allowed after io command');
     }
-    const command = this.undoStack.pop();
+    const command = this.undoStack.at(-1);
     if (command === undefined) {
       throw new AppError('nothing to undo');
     }
     const result = command.undo(document);
+    this.undoStack.pop();
     this.redoStack.push(command);
+    this.onDocumentChanged?.({ document, reason: 'undo' });
     return result;
   }
 
@@ -50,12 +57,14 @@ export class CommandHistory {
     if (this.locked) {
       throw new AppError('redo not allowed after io command');
     }
-    const command = this.redoStack.pop();
+    const command = this.redoStack.at(-1);
     if (command === undefined) {
       throw new AppError('nothing to redo');
     }
     const result = command.redo === undefined ? command.execute(document) : command.redo(document);
+    this.redoStack.pop();
     this.undoStack.push(command);
+    this.onDocumentChanged?.({ document, reason: 'redo' });
     return result;
   }
 

@@ -6,6 +6,7 @@ import type { SvgReaderPort } from '../../ports/Ports.js';
 /** read <file.svg>：警告行排在摘要前面。 */
 export class ReadCommand implements Command {
   readonly kind = 'io' as const;
+  readonly documentChange = 'read' as const;
 
   constructor(
     private readonly path: string,

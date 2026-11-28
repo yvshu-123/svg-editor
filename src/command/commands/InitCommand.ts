@@ -6,6 +6,7 @@ import { formatNumber } from '../../shared/NumberFormat.js';
 /** init [w] [h]：新建空画布。io 命令，执行完 undo/redo 锁住。 */
 export class InitCommand implements Command {
   readonly kind = 'io' as const;
+  readonly documentChange = 'init' as const;
 
   constructor(
     private readonly width = 800,
