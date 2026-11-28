@@ -16,10 +16,18 @@ export abstract class SnapshotCommand implements Command {
   private after: Document | null = null;
 
   execute(document: Document): CommandResult {
-    this.before = document.clone();
-    this.apply(document);
-    this.after = document.clone();
-    return { lines: this.describe(document) };
+    const before = document.clone();
+    try {
+      this.apply(document);
+      const after = document.clone();
+      const lines = this.describe(document);
+      this.before = before;
+      this.after = after;
+      return { lines };
+    } catch (error) {
+      document.restoreFrom(before);
+      throw error;
+    }
   }
 
   undo(document: Document): CommandResult {
@@ -38,7 +46,7 @@ export abstract class SnapshotCommand implements Command {
     return { lines: this.describe(document) };
   }
 
-  /** 真正改文档的地方。所有校验都要在改动之前完成。 */
+  /** 真正改文档的地方。执行失败时恢复编辑前的快照。 */
   protected abstract apply(document: Document): void;
 
   /** 执行完 / 重做后的回显。 */

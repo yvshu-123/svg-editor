@@ -48,11 +48,12 @@ export class SvgWriter {
 
   private renderShape(shape: Shape, depth: number, lines: string[]): void {
     const indent = '  '.repeat(depth);
+    const tag = shape.svgTag();
     const attributes = [
       `id="${escapeXml(shape.id)}"`,
+      ...(tag === shape.kind ? [] : [`data-kind="${escapeXml(shape.kind)}"`]),
       ...shape.svgAttributes().map(([name, value]) => `${name}="${escapeXml(value)}"`),
     ].join(' ');
-    const tag = shape.kind;
 
     if (shape.acceptsChildren()) {
       const children = (shape as Group).children;

@@ -19,6 +19,9 @@ export class UngroupCommand extends SnapshotCommand {
     if (!group.acceptsChildren()) {
       throw new AppError(`not a container: ${this.groupId}`);
     }
+    if (!group.canUngroup()) {
+      throw new AppError(`cannot ungroup: ${this.groupId}`);
+    }
     const container = group as Group;
     const parent = group.parent;
     if (parent === null || parent.id === '') {
@@ -28,14 +31,10 @@ export class UngroupCommand extends SnapshotCommand {
     const index = parent.indexOf(group);
     const children = [...container.children];
 
-    // 先把孩子摘出来，再把空壳删掉，最后按原索引插回去。
-    for (const child of children) {
-      container.detach(child);
-    }
-    document.remove(this.groupId);
     children.forEach((child, offset) => {
-      parent.insertAt(child, index + offset);
+      document.moveTo(child, parent, index + offset);
     });
+    document.remove(this.groupId);
     this.count = children.length;
   }
 

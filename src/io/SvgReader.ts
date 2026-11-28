@@ -4,7 +4,7 @@ import { Document } from '../domain/Document.js';
 import type { Group } from '../domain/Group.js';
 import { IdAllocator } from '../domain/IdAllocator.js';
 import type { Shape } from '../domain/Shape.js';
-import { ShapeFactory } from '../shapes/ShapeFactory.js';
+import type { ShapeFactory } from '../shapes/ShapeFactory.js';
 import { AppError } from '../shared/AppError.js';
 import { parseNumber } from '../shared/NumberFormat.js';
 import type { FileSystemPort } from './FileSystemPort.js';
@@ -13,6 +13,12 @@ import type { ReadResult } from '../ports/Ports.js';
 const DEFAULT_WIDTH = 800;
 const DEFAULT_HEIGHT = 600;
 const STYLE_ATTRIBUTES = ['fill', 'stroke', 'stroke-width'] as const;
+
+interface ReadState {
+  readonly allocator: IdAllocator;
+  readonly ids: Set<string>;
+  readonly warnings: string[];
+}
 
 /**
  * SVG 反序列化：DOM → 领域对象。
@@ -60,45 +66,90 @@ export class SvgReader {
       this.dimension(root, 'width') ?? this.viewBoxDimension(root, 0) ?? DEFAULT_WIDTH,
       this.dimension(root, 'height') ?? this.viewBoxDimension(root, 1) ?? DEFAULT_HEIGHT,
     );
-    const warnings: string[] = [];
-    const allocator = new IdAllocator((id) => document.has(id));
+    const ids = new Set<string>();
+    const state: ReadState = {
+      ids,
+      allocator: new IdAllocator((id) => ids.has(id) || document.has(id)),
+      warnings: [],
+    };
 
     for (const element of this.childElements(root)) {
-      this.buildElement(element, document, document.root, allocator, warnings);
+      const shape = this.buildElement(element, state);
+      if (shape !== undefined) {
+        document.add(shape);
+      }
     }
 
-    return { document, warnings };
+    return { document, warnings: state.warnings };
   }
 
-  private buildElement(
-    element: XmlElement,
-    document: Document,
-    parent: Group,
-    allocator: IdAllocator,
-    warnings: string[],
-  ): Shape | undefined {
-    const kind = element.localName ?? element.tagName;
-    if (!this.factory.has(kind)) {
-      warnings.push(`warning: unsupported element <${kind}> skipped`);
+  private buildElement(element: XmlElement, state: ReadState): Shape | undefined {
+    const tag = element.localName ?? element.tagName;
+    const kind = element.getAttribute('data-kind');
+    const provider = (kind ? this.factory.provider(kind) : undefined) ?? this.factory.provider(tag);
+    if (provider === undefined) {
+      state.warnings.push(`warning: unsupported element <${tag}> skipped`);
       return undefined;
     }
 
-    const id = this.resolveId(element, kind, allocator, warnings);
-    const params = this.factory.svgAttributeNames(kind).map((name) => element.getAttribute(name) ?? '0');
-    if (this.factory.usesTextContent(kind)) {
-      params.push(element.textContent ?? '');
+    const id = this.resolveId(element, tag, state.allocator, state.warnings);
+    if (provider.read !== undefined) {
+      this.reserveId(id, state);
+      const shape = provider.read({
+        id,
+        attributes: this.readAttributes(element),
+        textContent: element.textContent ?? '',
+        children: this.buildChildren(element, state),
+      });
+      if (shape.id !== id) {
+        throw new AppError(`shape provider changed SVG id: ${id}`);
+      }
+      this.applyStyle(shape, element);
+      return shape;
     }
 
-    const shape = this.factory.create(kind, id, params);
+    const params = provider.svgAttributes.map((name) => element.getAttribute(name) ?? '0');
+    if (provider.hasTextContent) {
+      params.push(element.textContent ?? '');
+    }
+    const shape = provider.create(id, params);
     this.applyStyle(shape, element);
-    document.add(shape, parent);
-
+    this.reserveId(id, state);
     if (shape.acceptsChildren()) {
-      for (const child of this.childElements(element)) {
-        this.buildElement(child, document, shape as Group, allocator, warnings);
+      for (const child of this.buildChildren(element, state)) {
+        (shape as Group).append(child);
       }
     }
     return shape;
+  }
+
+  private buildChildren(element: XmlElement, state: ReadState): Shape[] {
+    const children: Shape[] = [];
+    for (const child of this.childElements(element)) {
+      const shape = this.buildElement(child, state);
+      if (shape !== undefined) {
+        children.push(shape);
+      }
+    }
+    return children;
+  }
+
+  private reserveId(id: string, state: ReadState): void {
+    if (state.ids.has(id)) {
+      throw new AppError(`id already exists: ${id}`);
+    }
+    state.ids.add(id);
+  }
+
+  private readAttributes(element: XmlElement): Record<string, string> {
+    const attributes: Array<[string, string]> = [];
+    for (let index = 0; index < element.attributes.length; index += 1) {
+      const attribute = element.attributes.item(index);
+      if (attribute !== null) {
+        attributes.push([attribute.name, attribute.value]);
+      }
+    }
+    return Object.fromEntries(attributes);
   }
 
   private resolveId(element: XmlElement, kind: string, allocator: IdAllocator, warnings: string[]): string {

@@ -56,12 +56,17 @@ export class Document {
     if (!parent.acceptsChildren()) {
       throw new AppError(`not a container: ${parent.id}`);
     }
-    this.collectIds(shape);
+    const pending = new Map<string, Shape>();
+    this.collectIds(shape, pending);
     parent.insertAt(shape, index ?? parent.childCount);
+    for (const [id, node] of pending) {
+      this.index.set(id, node);
+    }
   }
 
   remove(id: string): Shape {
     const shape = this.find(id);
+    shape.onDetach();
     shape.parent?.detach(shape);
     this.dropIds(shape);
     return shape;
@@ -74,6 +79,9 @@ export class Document {
     }
     if (shape === parent || this.isAncestorOf(shape, parent)) {
       throw new AppError(`cannot move a container into its own descendant: ${shape.id}`);
+    }
+    if (shape.parent !== parent) {
+      shape.onDetach();
     }
     shape.parent?.detach(shape);
     parent.insertAt(shape, index ?? parent.childCount);
@@ -124,14 +132,17 @@ export class Document {
     return false;
   }
 
-  private collectIds(shape: Shape): void {
-    if (this.index.has(shape.id)) {
+  private collectIds(shape: Shape, pending: Map<string, Shape>): void {
+    if (shape.id.length === 0) {
+      throw new AppError('shape id must not be empty');
+    }
+    if (this.index.has(shape.id) || pending.has(shape.id)) {
       throw new AppError(`id already exists: ${shape.id}`);
     }
-    this.index.set(shape.id, shape);
+    pending.set(shape.id, shape);
     if (shape.acceptsChildren()) {
       for (const child of (shape as Group).children) {
-        this.collectIds(child);
+        this.collectIds(child, pending);
       }
     }
   }

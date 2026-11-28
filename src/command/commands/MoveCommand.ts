@@ -22,6 +22,7 @@ export class MoveCommand extends SnapshotCommand {
     const shape = document.find(this.shapeId);
     this.label = `${shape.kind}#${shape.id}`;
     this.isContainer = shape.acceptsChildren();
+    shape.onDetach();
     shape.move(this.dx, this.dy);
   }
 
