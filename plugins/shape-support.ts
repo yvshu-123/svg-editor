@@ -5,7 +5,6 @@ import { parseNumber } from '../src/shared/NumberFormat.js';
 
 export function defineShapePlugin(provider: ShapeProvider) {
   return {
-    contributes: { shapes: [provider.kind] },
     activate(context: Pick<PluginContext, 'shapes'>): void {
       context.shapes.register(provider.kind, provider);
     },

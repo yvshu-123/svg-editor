@@ -1,0 +1,11 @@
+{
+  "name": "@svgframe/plugin-shape-circle",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "contributes": {
+    "shapes": [
+      "circle"
+    ]
+  }
+}
