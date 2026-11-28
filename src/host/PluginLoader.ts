@@ -2,15 +2,13 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { PluginHostContext, RegisteredNames } from '../kernel/PluginContext.js';
-import { DuplicateRegistrationError } from '../kernel/Registry.js';
+import { DuplicateRegistrationError, REGISTRATION_CATEGORIES } from '../kernel/Registry.js';
 
 interface PluginConfigEntry {
   readonly module: string;
   readonly enabled?: boolean;
   readonly options?: unknown;
 }
-
-const CATEGORIES = ['shapes', 'commands', 'decorators', 'attributes'] as const;
 
 export async function loadPlugins(
   configPath: string,
@@ -65,7 +63,8 @@ async function loadPlugin(
     name = typeof plugin.name === 'string' ? plugin.name : name;
     await plugin.activate(activation.context, entry.options);
 
-    const mismatch = manifestMismatch(name, manifest?.contributes ?? plugin.contributes, activation.registeredNames());
+    const declared = manifest === undefined ? plugin.contributes : manifest.contributes;
+    const mismatch = manifestMismatch(name, declared, activation.registeredNames());
     if (mismatch !== undefined) {
       report(mismatch);
       return;
@@ -117,8 +116,9 @@ function manifestMismatch(name: string, contributes: unknown, registered: Regist
   if (contributes !== undefined && !isRecord(contributes)) {
     return `plugin manifest mismatch: ${name} (declared: invalid contributes, registered: )`;
   }
-  for (const category of CATEGORIES) {
-    const raw = contributes?.[category] ?? [];
+  for (const category of REGISTRATION_CATEGORIES) {
+    const entry = contributes?.[category];
+    const raw = entry === undefined ? [] : entry;
     const actual = [...registered[category]].sort();
     if (!Array.isArray(raw) || !raw.every((item) => typeof item === 'string')) {
       return `plugin manifest mismatch: ${name} (declared: invalid ${category}, registered: ${actual.join(', ')})`;

@@ -15,17 +15,16 @@ import { SetAttributeCommand } from '../command/commands/SetAttributeCommand.js'
 import { ShowCommand } from '../command/commands/ShowCommand.js';
 import { TreeCommand } from '../command/commands/TreeCommand.js';
 import { UngroupCommand } from '../command/commands/UngroupCommand.js';
-import type { AttributeService } from '../kernel/AttributeService.js';
 import type { CommandPlugin } from '../kernel/CommandPlugin.js';
 import type { Registration } from '../kernel/Registry.js';
-import type { ShapeRenderer, SvgReaderPort, SvgWriterPort, TreeRenderer } from '../ports/Ports.js';
+import type { AttributeSetter, ShapeRenderer, SvgReaderPort, SvgWriterPort, TreeRenderer } from '../ports/Ports.js';
 import type { ShapeFactory } from '../shapes/ShapeFactory.js';
 import { AppError } from '../shared/AppError.js';
 import { parseNumber } from '../shared/NumberFormat.js';
 
 export interface BuiltinCommandDependencies {
   factory: ShapeFactory;
-  attributes: AttributeService;
+  attributes: AttributeSetter;
   reader: SvgReaderPort;
   writer: SvgWriterPort;
   treeRenderer: TreeRenderer;

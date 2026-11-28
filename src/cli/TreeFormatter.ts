@@ -2,14 +2,13 @@ import type { Document } from '../domain/Document.js';
 import type { Group } from '../domain/Group.js';
 import type { Shape } from '../domain/Shape.js';
 import type { Registry } from '../kernel/Registry.js';
-import type { TreeDecorator } from '../kernel/TreeDecorator.js';
+import type { TreeDecorator, TreeNodeSummary } from '../kernel/TreeDecorator.js';
 import { formatNumber } from '../shared/NumberFormat.js';
 
 interface Row {
   readonly prefix: string;
   readonly label: string;
-  readonly summary: string;
-  readonly shape: Shape;
+  readonly node: TreeNodeSummary;
 }
 
 const PADDING = 2;
@@ -26,17 +25,18 @@ export class TreeFormatter {
     if (rootId === undefined) {
       const rows: Row[] = [];
       this.collect(document.children, '', rows);
-      return [`svg (${formatNumber(document.width)}x${formatNumber(document.height)})`, ...this.align(rows, document, decorators)];
+      return [`svg (${formatNumber(document.width)}x${formatNumber(document.height)})`, ...this.align(rows, decorators)];
     }
 
     const root = document.find(rootId);
-    const summary = root.describe();
+    const node = summarize(root);
+    const { summary } = node;
     const head = summary.length === 0 ? `${root.kind}#${root.id}` : `${root.kind}#${root.id} ${summary}`;
     const rows: Row[] = [];
     if (root.acceptsChildren()) {
       this.collect((root as Group).children, '', rows);
     }
-    return [this.decorate(head, root, document, decorators), ...this.align(rows, document, decorators)];
+    return [this.decorate(head, node, decorators), ...this.align(rows, decorators)];
   }
 
   private collect(children: readonly Shape[], prefix: string, rows: Row[]): void {
@@ -45,8 +45,7 @@ export class TreeFormatter {
       rows.push({
         prefix: `${prefix}${isLast ? '└── ' : '├── '}`,
         label: `${child.kind}#${child.id}`,
-        summary: child.describe(),
-        shape: child,
+        node: summarize(child),
       });
       if (child.acceptsChildren()) {
         this.collect((child as Group).children, `${prefix}${isLast ? '    ' : '│   '}`, rows);
@@ -54,24 +53,29 @@ export class TreeFormatter {
     });
   }
 
-  private align(rows: readonly Row[], document: Document, decorators: readonly TreeDecorator[]): string[] {
+  private align(rows: readonly Row[], decorators: readonly TreeDecorator[]): string[] {
     const width = rows.reduce((max, row) => Math.max(max, row.prefix.length + row.label.length), 0);
     return rows.map((row) => {
       const head = `${row.prefix}${row.label}`;
-      const line = row.summary.length === 0
+      const { summary } = row.node;
+      const line = summary.length === 0
         ? head
-        : `${head}${' '.repeat(width - head.length + PADDING)}${row.summary}`;
-      return this.decorate(line, row.shape, document, decorators);
+        : `${head}${' '.repeat(width - head.length + PADDING)}${summary}`;
+      return this.decorate(line, row.node, decorators);
     });
   }
 
-  private decorate(line: string, shape: Shape, document: Document, decorators: readonly TreeDecorator[]): string {
+  private decorate(line: string, node: TreeNodeSummary, decorators: readonly TreeDecorator[]): string {
     for (const decorator of decorators) {
-      const label = decorator.decorate(shape, document);
+      const label = decorator.decorate(node);
       if (label) {
         line += ` ${label}`;
       }
     }
     return line;
   }
+}
+
+function summarize(shape: Shape): TreeNodeSummary {
+  return Object.freeze({ id: shape.id, kind: shape.kind, summary: shape.describe() });
 }

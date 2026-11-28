@@ -1,5 +1,5 @@
-import type { DocumentIoChange } from '../command/Command.js';
 import { Document } from '../domain/Document.js';
+import type { DocumentChangedEvent, DocumentChangedListener } from '../ports/Ports.js';
 import { AppError } from '../shared/AppError.js';
 import type { AttributeHandler } from './AttributeHandler.js';
 import type { CommandPlugin } from './CommandPlugin.js';
@@ -7,12 +7,8 @@ import { Registry, type Registration, type RegistrationCategory } from './Regist
 import type { ShapeProvider } from './ShapeProvider.js';
 import type { TreeDecorator } from './TreeDecorator.js';
 
-export interface DocumentChangedEvent {
-  readonly document: Document;
-  readonly reason: DocumentIoChange | 'io' | 'edit' | 'undo' | 'redo';
-}
+export type { DocumentChangedEvent, DocumentChangedListener } from '../ports/Ports.js';
 
-export type DocumentChangedListener = (event: DocumentChangedEvent) => void;
 export type RegisteredNames = Record<RegistrationCategory, readonly string[]>;
 
 export interface PluginContext {

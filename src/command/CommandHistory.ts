@@ -1,4 +1,4 @@
-import type { DocumentChangedListener } from '../kernel/PluginContext.js';
+import type { DocumentChangedListener } from '../ports/Ports.js';
 import { AppError } from '../shared/AppError.js';
 import type { Command, CommandResult } from './Command.js';
 import type { Document } from '../domain/Document.js';

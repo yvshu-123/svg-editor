@@ -13,6 +13,6 @@ export interface ShapeProvider {
   readonly svgAttributes: readonly string[];
   readonly hasTextContent?: boolean;
   create(id: string, params: string[]): Shape;
-  /** 需要从已解析的子树恢复类型时，接管默认读回。 */
+  /** 需要从已解析的子树恢复类型时，接管默认读回，并识别相应的 data-kind 标记。 */
   read?(input: SvgShapeInput): Shape;
 }

@@ -34,6 +34,9 @@ it('配置从自身目录按顺序装配，错误插件回滚后仍能加载下�
     writeFileSync(join(directory, 'mismatch.mjs'), `
       export default { name: 'mismatch', contributes: { shapes: ['extra'] }, activate() {} };
     `);
+    writeFileSync(join(directory, 'invalid-manifest.mjs'), `
+      export default { name: 'invalid-manifest', contributes: { commands: null }, activate() {} };
+    `);
     writeFileSync(join(directory, 'no-default.mjs'), 'export const ignored = true;');
     writeFileSync(join(directory, 'bad-dependency.mjs'), "import './missing-dependency.mjs';");
     writeFileSync(join(directory, 'throws.mjs'), `
@@ -53,6 +56,7 @@ it('配置从自身目录按顺序装配，错误插件回滚后仍能加载下�
         { module: './no-default.mjs' },
         { module: './duplicate.mjs' },
         { module: './mismatch.mjs' },
+        { module: './invalid-manifest.mjs' },
         { module: './bad-dependency.mjs' },
         { module: './throws.mjs' },
         { module: './fixture/index.mjs', options: { message: 'hello from configuration' } },
@@ -67,6 +71,7 @@ it('配置从自身目录按顺序装配，错误插件回滚后仍能加载下�
       'plugin has no default export: ./no-default.mjs',
       'duplicate registration: commands/help',
       'plugin manifest mismatch: mismatch (declared: extra, registered: )',
+      'plugin manifest mismatch: invalid-manifest (declared: invalid commands, registered: )',
       expect.stringMatching(/^plugin failed to activate: \.\/bad-dependency\.mjs \(/),
       'plugin failed to activate: throws (boom)',
     ]);

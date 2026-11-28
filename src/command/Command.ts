@@ -1,7 +1,7 @@
 import type { Document } from '../domain/Document.js';
+import type { DocumentIoChange } from '../ports/Ports.js';
 
 export type CommandKind = 'edit' | 'io' | 'display';
-export type DocumentIoChange = 'init' | 'read' | 'save';
 
 export interface CommandResult {
   readonly lines: string[];

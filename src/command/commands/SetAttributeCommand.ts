@@ -1,8 +1,10 @@
 import type { Document } from '../../domain/Document.js';
-import { AttributeService } from '../../kernel/AttributeService.js';
+import type { AttributeSetter } from '../../ports/Ports.js';
 import { SnapshotCommand } from '../SnapshotCommand.js';
 
-const defaultAttributes = new AttributeService();
+const defaultAttributes: AttributeSetter = {
+  apply: (shape, attribute, value) => shape.setAttribute(attribute, value),
+};
 
 /** set <id> <attr> <value>：通过属性服务分派，以一条编辑命令撤销。 */
 export class SetAttributeCommand extends SnapshotCommand {

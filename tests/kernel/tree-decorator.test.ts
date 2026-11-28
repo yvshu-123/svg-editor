@@ -6,9 +6,16 @@ it('提交后标签能读取编辑、撤销、重做和保存后的状态', () =
   const reasons: string[] = [];
   let lastChange: string | undefined;
   let savePath: string | null = null;
+  let decoratedNode: unknown;
   const activation = context.beginActivation();
   activation.context.decorators.register('sample-tag', {
-    decorate: (shape) => shape.id === 'r1' ? lastChange : undefined,
+    decorate(node) {
+      if (node.id === 'r1') {
+        decoratedNode = node;
+        return lastChange;
+      }
+      return undefined;
+    },
   });
   const unsubscribe = activation.context.on('document:changed', (event) => {
     expect(event.document).toBe(document);
@@ -21,6 +28,7 @@ it('提交后标签能读取编辑、撤销、重做和保存后的状态', () =
   activation.commit();
   repl.handleLine('create rect r1 0 0 1 1');
   expect(repl.handleLine('tree r1')).toEqual(['rect#r1 x=0 y=0 w=1 h=1 edit']);
+  expect(decoratedNode).toEqual({ id: 'r1', kind: 'rect', summary: 'x=0 y=0 w=1 h=1' });
   repl.handleLine('move r1 10 0');
   repl.handleLine('undo');
   expect(repl.handleLine('tree')).toEqual(['svg (800x600)', '└── rect#r1  x=0 y=0 w=1 h=1 undo']);
