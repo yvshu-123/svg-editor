@@ -3,7 +3,6 @@ help
 tree
 undo
 redo
-
 # 作业 §6 主会话
 init 800 600
 create rect bg 0 0 800 600 #ffffff
@@ -22,7 +21,12 @@ delete box
 undo
 save demo.svg
 undo
-
+# 作业 §6 独立保存会话
+init 400 200
+create rect start 30 70 120 60 #4a90d9
+create line edge 150 100 250 100 black
+create rect end 250 70 120 60 #f5a623
+save demo.svg
 # 作业 §6.1 两节点流程图
 init 800 600
 create g flowchart
@@ -38,11 +42,9 @@ move node2 0 100
 undo
 set process-label text "处理数据 v2"
 save flowchart.svg
-
 # 读外部 SVG
 read tests/fixtures/other.svg
 tree
-
 # 错误文案
 init
 create rect r1 0 0 1 1
