@@ -6,7 +6,6 @@ import { Repl } from '../../src/cli/Repl.js';
 import { ShowFormatter } from '../../src/cli/ShowFormatter.js';
 import { TreeFormatter } from '../../src/cli/TreeFormatter.js';
 import { CommandHistory } from '../../src/command/CommandHistory.js';
-import { Document } from '../../src/domain/Document.js';
 import { SvgReader } from '../../src/io/SvgReader.js';
 import { SvgWriter } from '../../src/io/SvgWriter.js';
 import { createPluginContext } from '../../src/kernel/PluginContext.js';
@@ -28,7 +27,7 @@ export function createCliSession(fs = new MemoryFileSystem(), helpLines?: () => 
     helpLines: helpLines ?? (() => help.compose()),
   });
 
-  const document = new Document();
+  const { document } = context;
   const history = new CommandHistory();
   const registry = new CommandRegistry(context.commands);
   const tokenizer = new LineTokenizer();

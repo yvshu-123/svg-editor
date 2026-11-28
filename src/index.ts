@@ -6,7 +6,6 @@ import { Repl } from './cli/Repl.js';
 import { ShowFormatter } from './cli/ShowFormatter.js';
 import { TreeFormatter } from './cli/TreeFormatter.js';
 import { CommandHistory } from './command/CommandHistory.js';
-import { Document } from './domain/Document.js';
 import { NodeFileSystem } from './io/NodeFileSystem.js';
 import { SvgReader } from './io/SvgReader.js';
 import { SvgWriter } from './io/SvgWriter.js';
@@ -35,7 +34,7 @@ activateBuiltinCommands(context.commands, {
 const registry = new CommandRegistry(context.commands);
 
 const repl = new Repl({
-  document: new Document(),
+  document: context.document,
   history: new CommandHistory(),
   registry,
   tokenizer: new LineTokenizer(),
