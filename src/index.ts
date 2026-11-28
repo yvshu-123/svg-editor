@@ -1,6 +1,6 @@
-import { treePlugin } from './builtins/TreePlugin.js';
+import { activateBuiltinCommands } from './builtins/BuiltinCommands.js';
 import { CommandRegistry } from './cli/CommandRegistry.js';
-import { HELP_LINES } from './cli/HelpText.js';
+import { HelpComposer } from './cli/HelpComposer.js';
 import { LineTokenizer } from './cli/LineTokenizer.js';
 import { Repl } from './cli/Repl.js';
 import { ShowFormatter } from './cli/ShowFormatter.js';
@@ -23,18 +23,16 @@ const treeFormatter = new TreeFormatter();
 const showFormatter = new ShowFormatter();
 
 const context = createPluginContext();
-const treeRenderer = (document: Document, rootId?: string) => treeFormatter.render(document, rootId);
-const tree = treePlugin(treeRenderer);
-context.commands.register(tree.name, tree);
-
-const registry = new CommandRegistry({
+const help = new HelpComposer(context.commands);
+activateBuiltinCommands(context.commands, {
   factory: shapeFactory,
   reader: new SvgReader(fileSystem, shapeFactory),
   writer: new SvgWriter(fileSystem),
-  treeRenderer,
+  treeRenderer: (document, rootId) => treeFormatter.render(document, rootId),
   shapeRenderer: (document, id) => showFormatter.render(document, id),
-  helpLines: HELP_LINES,
-}, context.commands);
+  helpLines: () => help.compose(),
+});
+const registry = new CommandRegistry(context.commands);
 
 const repl = new Repl({
   document: new Document(),

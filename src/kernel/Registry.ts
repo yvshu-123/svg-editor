@@ -2,8 +2,12 @@ import { AppError } from '../shared/AppError.js';
 
 export type RegistrationCategory = 'shapes' | 'commands' | 'decorators' | 'attributes';
 
+export interface Registration<T> {
+  register(name: string, contribution: T): void;
+}
+
 /** 同一个类别内按注册顺序读取贡献。 */
-export class Registry<T> {
+export class Registry<T> implements Registration<T> {
   private readonly entries = new Map<string, T>();
 
   constructor(private readonly category: RegistrationCategory) {}

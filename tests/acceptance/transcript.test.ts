@@ -1,41 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { CommandRegistry } from '../../src/cli/CommandRegistry.js';
-import { HELP_LINES } from '../../src/cli/HelpText.js';
-import { LineTokenizer } from '../../src/cli/LineTokenizer.js';
-import { Repl } from '../../src/cli/Repl.js';
-import { ShowFormatter } from '../../src/cli/ShowFormatter.js';
-import { TreeFormatter } from '../../src/cli/TreeFormatter.js';
-import { CommandHistory } from '../../src/command/CommandHistory.js';
-import { Document } from '../../src/domain/Document.js';
-import { SvgReader } from '../../src/io/SvgReader.js';
-import { SvgWriter } from '../../src/io/SvgWriter.js';
-import { ShapeFactory } from '../../src/shapes/ShapeFactory.js';
+import { createCliSession as createSession } from '../support/cli.js';
 import { MemoryFileSystem } from '../support/memoryFs.js';
 
 const fixturePath = fileURLToPath(new URL('../fixtures/other.svg', import.meta.url));
-
-const createSession = (fs = new MemoryFileSystem()) => {
-  const factory = new ShapeFactory();
-  const tree = new TreeFormatter();
-  const show = new ShowFormatter();
-  const registry = new CommandRegistry({
-    factory,
-    reader: new SvgReader(fs, factory),
-    writer: new SvgWriter(fs),
-    treeRenderer: (document, rootId) => tree.render(document, rootId),
-    shapeRenderer: (document, id) => show.render(document, id),
-    helpLines: HELP_LINES,
-  });
-  const repl = new Repl({
-    document: new Document(),
-    history: new CommandHistory(),
-    registry,
-    tokenizer: new LineTokenizer(),
-  });
-  return { repl, fs };
-};
 
 describe('回放作业 §6 的主会话', () => {
   it('每一步的输出都对得上', () => {

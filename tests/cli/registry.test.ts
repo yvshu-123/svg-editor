@@ -1,39 +1,16 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { CommandRegistry } from '../../src/cli/CommandRegistry.js';
-import { LineTokenizer } from '../../src/cli/LineTokenizer.js';
-import { ShowFormatter } from '../../src/cli/ShowFormatter.js';
-import { TreeFormatter } from '../../src/cli/TreeFormatter.js';
-import { CommandHistory } from '../../src/command/CommandHistory.js';
-import { Document } from '../../src/domain/Document.js';
-import { SvgReader } from '../../src/io/SvgReader.js';
-import { SvgWriter } from '../../src/io/SvgWriter.js';
-import { ShapeFactory } from '../../src/shapes/ShapeFactory.js';
-import { MemoryFileSystem } from '../support/memoryFs.js';
+import { createCliSession } from '../support/cli.js';
 
-let registry: CommandRegistry;
-let tokenizer: LineTokenizer;
-let doc: Document;
-let history: CommandHistory;
+let session: ReturnType<typeof createCliSession>;
+let doc: typeof session.document;
 
 beforeEach(() => {
-  const fs = new MemoryFileSystem();
-  const factory = new ShapeFactory();
-  const tree = new TreeFormatter();
-  const show = new ShowFormatter();
-  tokenizer = new LineTokenizer();
-  registry = new CommandRegistry({
-    factory,
-    reader: new SvgReader(fs, factory),
-    writer: new SvgWriter(fs),
-    treeRenderer: (document, rootId) => tree.render(document, rootId),
-    shapeRenderer: (document, id) => show.render(document, id),
-    helpLines: ['commands'],
-  });
-  doc = new Document();
-  history = new CommandHistory();
+  session = createCliSession();
+  doc = session.document;
 });
 
 const run = (line: string): string[] => {
+  const { tokenizer, history, registry } = session;
   const tokens = tokenizer.tokenize(line);
   if (tokens === null) {
     return [];
