@@ -76,14 +76,13 @@ export class Repl {
       return result.lines;
     }
 
-    const command = this.deps.registry.build(tokens);
-
-    if (!this.hasDocument && name !== 'init' && name !== 'read' && name !== 'help') {
-      throw new AppError(NO_DOCUMENT);
+    const { command, requiresDocument, opensDocument } = this.deps.registry.prepare(tokens);
+    if (requiresDocument) {
+      this.requireDocument();
     }
 
     const result = this.deps.history.execute(command, this.deps.document);
-    if (name === 'init' || name === 'read') {
+    if (opensDocument) {
       this.hasDocument = true;
     }
     return result.lines;

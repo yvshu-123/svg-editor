@@ -14,6 +14,8 @@ import { SetAttributeCommand } from '../command/commands/SetAttributeCommand.js'
 import { ShowCommand } from '../command/commands/ShowCommand.js';
 import { TreeCommand } from '../command/commands/TreeCommand.js';
 import { UngroupCommand } from '../command/commands/UngroupCommand.js';
+import type { CommandPlugin } from '../kernel/CommandPlugin.js';
+import type { Registry } from '../kernel/Registry.js';
 import type { Command } from '../command/Command.js';
 import type { ShapeFactory } from '../shapes/ShapeFactory.js';
 import { AppError } from '../shared/AppError.js';
@@ -40,22 +42,38 @@ const usage = (text: string): AppError => new AppError(`usage: ${text}`);
 export class CommandRegistry {
   private readonly handlers = new Map<string, Handler>();
 
-  constructor(private readonly deps: CommandRegistryDependencies) {
+  constructor(
+    private readonly deps: CommandRegistryDependencies,
+    private readonly commands?: Registry<CommandPlugin>,
+  ) {
     this.registerDocumentCommands();
     this.registerEditCommands();
     this.registerViewCommands();
   }
 
   build(tokens: string[]): Command {
+    return this.prepare(tokens).command;
+  }
+
+  prepare(tokens: string[]): { command: Command; requiresDocument: boolean; opensDocument: boolean } {
     const name = tokens[0];
     if (name === undefined) {
       throw new AppError('empty command');
+    }
+    const plugin = this.commands?.get(name);
+    if (plugin !== undefined) {
+      return {
+        command: plugin.build(tokens.slice(1)),
+        requiresDocument: plugin.requiresDocument,
+        opensDocument: plugin.opensDocument === true,
+      };
     }
     const handler = this.handlers.get(name);
     if (handler === undefined) {
       throw new AppError(`unknown command: ${name}`);
     }
-    return handler(tokens.slice(1));
+    const opensDocument = name === 'init' || name === 'read';
+    return { command: handler(tokens.slice(1)), requiresDocument: !opensDocument && name !== 'help', opensDocument };
   }
 
   private registerDocumentCommands(): void {
@@ -150,10 +168,12 @@ export class CommandRegistry {
   }
 
   private registerViewCommands(): void {
-    this.handlers.set('tree', (args) => {
-      this.expect(args, 0, 1, 'tree [id]');
-      return new TreeCommand(this.deps.treeRenderer, args[0]);
-    });
+    if (this.commands?.get('tree') === undefined) {
+      this.handlers.set('tree', (args) => {
+        this.expect(args, 0, 1, 'tree [id]');
+        return new TreeCommand(this.deps.treeRenderer, args[0]);
+      });
+    }
 
     this.handlers.set('show', (args) => {
       this.expect(args, 1, 1, 'show <id>');

@@ -1,3 +1,4 @@
+import { treePlugin } from './builtins/TreePlugin.js';
 import { CommandRegistry } from './cli/CommandRegistry.js';
 import { HELP_LINES } from './cli/HelpText.js';
 import { LineTokenizer } from './cli/LineTokenizer.js';
@@ -9,6 +10,7 @@ import { Document } from './domain/Document.js';
 import { NodeFileSystem } from './io/NodeFileSystem.js';
 import { SvgReader } from './io/SvgReader.js';
 import { SvgWriter } from './io/SvgWriter.js';
+import { createPluginContext } from './kernel/PluginContext.js';
 import { ShapeFactory } from './shapes/ShapeFactory.js';
 
 /**
@@ -20,14 +22,19 @@ const shapeFactory = new ShapeFactory();
 const treeFormatter = new TreeFormatter();
 const showFormatter = new ShowFormatter();
 
+const context = createPluginContext();
+const treeRenderer = (document: Document, rootId?: string) => treeFormatter.render(document, rootId);
+const tree = treePlugin(treeRenderer);
+context.commands.register(tree.name, tree);
+
 const registry = new CommandRegistry({
   factory: shapeFactory,
   reader: new SvgReader(fileSystem, shapeFactory),
   writer: new SvgWriter(fileSystem),
-  treeRenderer: (document, rootId) => treeFormatter.render(document, rootId),
+  treeRenderer,
   shapeRenderer: (document, id) => showFormatter.render(document, id),
   helpLines: HELP_LINES,
-});
+}, context.commands);
 
 const repl = new Repl({
   document: new Document(),
