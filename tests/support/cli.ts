@@ -9,12 +9,12 @@ import { CommandHistory } from '../../src/command/CommandHistory.js';
 import { SvgReader } from '../../src/io/SvgReader.js';
 import { SvgWriter } from '../../src/io/SvgWriter.js';
 import { createPluginContext } from '../../src/kernel/PluginContext.js';
-import { ShapeFactory } from '../../src/shapes/ShapeFactory.js';
 import { MemoryFileSystem } from './memoryFs.js';
+import { createShapeFactory } from './shapes.js';
 
 export function createCliSession(fs = new MemoryFileSystem(), helpLines?: () => readonly string[]) {
   const context = createPluginContext();
-  const factory = new ShapeFactory();
+  const factory = createShapeFactory(context);
   const tree = new TreeFormatter();
   const show = new ShowFormatter();
   const help = new HelpComposer(context.commands);

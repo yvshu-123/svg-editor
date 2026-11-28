@@ -5,7 +5,8 @@ import { InitCommand } from '../../src/command/commands/InitCommand.js';
 import { MoveCommand } from '../../src/command/commands/MoveCommand.js';
 import { TreeCommand } from '../../src/command/commands/TreeCommand.js';
 import { Document } from '../../src/domain/Document.js';
-import { ShapeFactory } from '../../src/shapes/ShapeFactory.js';
+import type { ShapeFactory } from '../../src/shapes/ShapeFactory.js';
+import { createShapeFactory } from '../support/shapes.js';
 
 describe('CommandHistory', () => {
   let doc: Document;
@@ -15,7 +16,7 @@ describe('CommandHistory', () => {
   beforeEach(() => {
     doc = new Document();
     history = new CommandHistory();
-    factory = new ShapeFactory();
+    factory = createShapeFactory();
   });
 
   const createRect = (id: string, x: number): CreateShapeCommand =>

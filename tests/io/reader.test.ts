@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Group } from '../../src/domain/Group.js';
 import { SvgReader } from '../../src/io/SvgReader.js';
-import { ShapeFactory } from '../../src/shapes/ShapeFactory.js';
 import { MemoryFileSystem } from '../support/memoryFs.js';
+import { createShapeFactory } from '../support/shapes.js';
 
 const fixturePath = fileURLToPath(new URL('../fixtures/other.svg', import.meta.url));
 const otherSvg = readFileSync(fixturePath, 'utf8');
@@ -14,7 +14,7 @@ let reader: SvgReader;
 
 beforeEach(() => {
   fs = new MemoryFileSystem();
-  reader = new SvgReader(fs, new ShapeFactory());
+  reader = new SvgReader(fs, createShapeFactory());
 });
 
 describe('SvgReader', () => {

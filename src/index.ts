@@ -1,3 +1,9 @@
+import rect from '../plugins/shape-rect/src/index.js';
+import circle from '../plugins/shape-circle/src/index.js';
+import ellipse from '../plugins/shape-ellipse/src/index.js';
+import line from '../plugins/shape-line/src/index.js';
+import text from '../plugins/shape-text/src/index.js';
+import group from '../plugins/shape-group/src/index.js';
 import { activateBuiltinCommands } from './builtins/BuiltinCommands.js';
 import { CommandRegistry } from './cli/CommandRegistry.js';
 import { HelpComposer } from './cli/HelpComposer.js';
@@ -17,11 +23,14 @@ import { ShapeFactory } from './shapes/ShapeFactory.js';
  * 依赖方向到这里收敛（cli → command / io / shapes / ports / domain）。
  */
 const fileSystem = new NodeFileSystem();
-const shapeFactory = new ShapeFactory();
+const context = createPluginContext();
+for (const shape of [rect, circle, ellipse, line, text, group]) {
+  shape.activate(context);
+}
+const shapeFactory = new ShapeFactory(context.shapes);
 const treeFormatter = new TreeFormatter();
 const showFormatter = new ShowFormatter();
 
-const context = createPluginContext();
 const help = new HelpComposer(context.commands);
 activateBuiltinCommands(context.commands, {
   factory: shapeFactory,

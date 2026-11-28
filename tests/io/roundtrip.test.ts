@@ -8,15 +8,15 @@ import { Rect } from '../../src/domain/Rect.js';
 import { TextShape } from '../../src/domain/TextShape.js';
 import { SvgReader } from '../../src/io/SvgReader.js';
 import { SvgWriter } from '../../src/io/SvgWriter.js';
-import { ShapeFactory } from '../../src/shapes/ShapeFactory.js';
 import { MemoryFileSystem } from '../support/memoryFs.js';
 import { fingerprint } from '../support/fingerprint.js';
+import { createShapeFactory } from '../support/shapes.js';
 
 describe('round-trip', () => {
   it('写出去再读回来，结构和属性完全一样', () => {
     const fs = new MemoryFileSystem();
     const writer = new SvgWriter(fs);
-    const reader = new SvgReader(fs, new ShapeFactory());
+    const reader = new SvgReader(fs, createShapeFactory());
 
     const doc = new Document(640, 480);
     doc.add(new Rect('bg', { x: 0, y: 0, width: 640, height: 480, fill: '#ffffff' }));
